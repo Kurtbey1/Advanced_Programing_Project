@@ -1,4 +1,5 @@
 SuperMarket Sales Analysis 2025
+
 📌 Executive Summary
 This project performs a comprehensive exploratory data analysis (EDA) on supermarket sales data. The goal is to extract actionable insights regarding branch performance, product line popularity, customer demographics, and revenue trends using Python's data science stack.
 
