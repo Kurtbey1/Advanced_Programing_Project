@@ -45,14 +45,12 @@ Ensure you have the dataset: SuperMarket Analysis.csv.
 
 Install dependencies:
 
-Bash
-
 pip install pandas numpy matplotlib
+
 Execute the script:
-
-Bash
-
 python analysis_script.py
+
+
 📉 Insights extracted
 Revenue Leader: Identifies the specific branch generating maximum cash flow.
 
