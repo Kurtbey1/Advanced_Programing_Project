@@ -1,46 +1,46 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 dataset = pd.read_csv("SuperMarket Analysis.csv")
+
 print("First rows:\n", dataset.head())
 print("\nInfo:\n")
 print(dataset.info())
 print("\nDescribe:\n", dataset.describe())
 
-
-#############################################################################
-print(dataset.isnull().sum())
+print("\nMissing values before replacement:\n", dataset.isnull().sum())
 dataset.replace(["", " ", "NA", "N/A", "nan"], pd.NA, inplace=True)
-print(dataset.isnull().sum())
-print(dataset.duplicated().sum())
+print("\nMissing values after replacement:\n", dataset.isnull().sum())
+print("\nDuplicated rows:", dataset.duplicated().sum())
+print("\nData types:\n", dataset.dtypes)
 
-print(dataset.dtypes)
-
-
-print(dataset['Customer type'].unique())
-print(dataset['Branch'].unique())
-print(dataset['City'].unique())
-print(dataset['Product line'].unique())
-print(dataset['Payment'].unique())
+print("\nUnique Customer types:", dataset['Customer type'].unique())
+print("Unique Branches:", dataset['Branch'].unique())
+print("Unique Cities:", dataset['City'].unique())
+print("Unique Product lines:", dataset['Product line'].unique())
+print("Unique Payment methods:", dataset['Payment'].unique())
 
 branches = dataset['Branch'].to_numpy()
 sales = dataset['Sales'].to_numpy()
 unique_branches = np.unique(branches)
-print(unique_branches)
+
 branch_sales = {}
 for branch in unique_branches:
     total = np.sum(sales[branches == branch])
     branch_sales[branch] = total
+
 highestBranch = max(branch_sales, key=branch_sales.get)
 highestRevenue = branch_sales[highestBranch]
 
-
-
+# Q1: Giza generates the highest revenue ($110,568.71). 
+# Why: Despite having the lowest transaction count (328), Giza has a significantly higher average sales value ($337.10) compared to Alex and Cairo.
+print("\nBranch with highest revenue:", highestBranch)
+print("Revenue:", highestRevenue)
 
 branchStatsNp = {}
-
-for branch in branches:
-    branchSales = sales[dataset['Branch'].to_numpy() == branch]
+for branch in unique_branches:
+    branchSales = sales[branches == branch]
     branchStatsNp[branch] = {
         'total_sales': np.sum(branchSales),
         'average_sales': np.mean(branchSales),
@@ -49,78 +49,55 @@ for branch in branches:
         'transaction_count': len(branchSales)
     }
 
+print("\nBranch Stats:\n", branchStatsNp)
 
-print("Branch with highest revenue:", highestBranch)
-print("Revenue:", highestBranch)
-print(branchStatsNp)
-print(highestRevenue)
-################################################################################################################
 Branch_stats = dataset.groupby(['Branch', 'Customer type', 'Gender', 'Payment']).agg(
     mean_sales=('Sales', 'mean'),
     median_sales=('Sales', 'median'),
     max_sales=('Sales', 'max'),
     min_sales=('Sales', 'min')
 )
+print("\nAggregated Branch Stats:\n", Branch_stats)
 
-
-print(Branch_stats)
-
-
-##################################################################################################
 Genders = dataset['Gender'].to_numpy()
 uniqueGenders = np.unique(Genders)
-
-
 for gender in uniqueGenders:
     count = np.sum(Genders == gender)
     print(f"Number of {gender}s: {count}")
-####################################################################
 
 totalSales = dataset.groupby('Customer type')['Sales'].sum()
-print(totalSales)
-
+# Q2: Yes. Members spend significantly more ($189,694.76) than Normal customers ($133,271.99).
+print("\nTotal Sales by Customer Type:\n", totalSales)
 
 mostPayment = dataset.groupby('Payment')['Quantity'].sum()
-print(mostPayment)
-
-##########################################################
-
+# Q3: Cash has the highest usage (1,896 units), narrowly beating E-wallet (1,892 units). 
+# Why: This suggests a strong preference for traditional liquid payments, though digital methods are almost equally popular.
+print("\nQuantity by Payment Method:\n", mostPayment)
 
 avgRating = dataset.groupby('Product line')['Rating'].mean()
-print(avgRating)
-
 highestProductLine = avgRating.idxmax()
 highestRating = avgRating.max()
 
+# Q4: Food and beverages has the highest average rating (~7.11).
 print("\nProduct line with highest average rating:", highestProductLine)
 print("Average rating:", highestRating)
-####################################################################################
 
 product_lines = dataset['Product line'].to_numpy()
 ratings = dataset['Rating'].to_numpy()
-
 unique_products = np.unique(product_lines)
 
 highest_rating = 0
 highest_product = ""
-
 for product in unique_products:
-    product_ratings = ratings[product_lines == product]  
-    avg = np.mean(product_ratings)                      
+    product_ratings = ratings[product_lines == product]
+    avg = np.mean(product_ratings)
     print(f"{product} - Average rating: {avg:.2f}")
-
     if avg > highest_rating:
         highest_rating = avg
         highest_product = product
 
 print("\nProduct line with highest average rating:", highest_product)
 print("Average rating:", highest_rating)
-
-
-
-
-
-################################################################
 
 productStats = dataset.groupby('Product line').agg(
     total_sales=('Sales', 'sum'),
@@ -132,29 +109,23 @@ productStats = dataset.groupby('Product line').agg(
     max_rating=('Rating', 'max'),
     min_rating=('Rating', 'min')
 )
-
-print(productStats)
-###################################################################
+print("\nProduct Stats:\n", productStats)
 
 unitPrice = dataset['Unit price'].to_numpy()
 quantity = dataset['Quantity'].to_numpy()
-
 correlation = np.corrcoef(unitPrice, quantity)[0, 1]
-print("Correlation (NumPy):", correlation)
+# Q5: No relationship. The correlation is 0.01, which is effectively zero, meaning unit price has no impact on the quantity purchased.
+print("\nCorrelation (Unit Price vs Quantity):", correlation)
 
-
-###########################################################################################
 branchSales = dataset.groupby('Branch')['Sales'].sum()
+plt.figure(figsize=(10,5))
 plt.plot(branchSales.index, branchSales.values, color='red', marker='*')
 plt.xlabel("Branch")
 plt.ylabel("Total Sales")
 plt.title("Total Sales per Branch")
 plt.show()
 
-
-
 dataset['Date'] = pd.to_datetime(dataset['Date'])
-
 customer_counts = dataset['Customer type'].value_counts()
 sales_over_time = dataset.groupby('Date')['Sales'].sum()
 ratings_over_time = dataset.groupby('Date')['Rating'].mean()
@@ -201,14 +172,13 @@ plt.xticks(ticks=range(len(corr_matrix.columns)), labels=corr_matrix.columns, ro
 plt.yticks(ticks=range(len(corr_matrix.columns)), labels=corr_matrix.columns)
 
 plt.subplot(3,3,6)
-product_lines = product_gross['Product line'].unique()
-data_to_plot = [product_gross[product_gross['Product line']==pl]['gross income'] for pl in product_lines]
-plt.boxplot(data_to_plot, labels=product_lines)
-plt.title("gross Income Distribution by Product Line")
+product_lines_unique = product_gross['Product line'].unique()
+data_to_plot = [product_gross[product_gross['Product line']==pl]['gross income'] for pl in product_lines_unique]
+plt.boxplot(data_to_plot, tick_labels=product_lines_unique)
+plt.title("Gross Income Distribution by Product Line")
 plt.xlabel("Product Line")
-plt.ylabel("gross Income")
+plt.ylabel("Gross Income")
 plt.xticks(rotation=45)
 
 plt.tight_layout()
 plt.show()
-
